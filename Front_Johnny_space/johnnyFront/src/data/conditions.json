@@ -1,0 +1,26 @@
+[
+  {
+    "titre": "Température",
+    "valeur": 23,
+    "unite": "°C",
+    "statut": "Idéal",
+    "accent": "green"
+  },
+  {
+    "titre": "Humidité de l'air",
+    "valeur": 58,
+    "unite": "%",
+    "statut": "Normal",
+    "accent": "blue"
+  },
+  {
+    "titre": "Humidité du sol",
+    "valeur": 42,
+    "unite": "%",
+    "statut": "Bon état",
+    "accent": "green",
+    "progress": 42,
+    "seuil": "Seuil: 30%",
+    "optimal": "Optimal: 40–60%"
+  }
+]
