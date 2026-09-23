@@ -19,10 +19,7 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Routes (à ajouter plus tard)
-// app.use('/api/readings', readingRoutes);
-// app.use('/api/actions', actionRoutes);
-// app.use('/api/alerts', alertRoutes);
+app.use('/api', apiRoutes);
 
 // Error handler (doit être à la fin)
 app.use(errorHandler);
