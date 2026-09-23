@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const logger = require('./middleware/logger');
 const errorHandler = require('./middleware/errorHandler');
+const apiRoutes = require('./routes');
 
 const app = express();
 
