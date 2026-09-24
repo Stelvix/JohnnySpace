@@ -1,11 +1,17 @@
 ﻿require('dotenv').config();
+const http = require('http');
 const app = require('./src/app');
 const pool = require('./src/config/database');
-const env = require('./src/config/env');
+const { initWebSocketServer, broadcastNewReading, broadcastNewAlert, broadcastEquipmentStatus } = require('./src/websocket/server');
 
-const PORT = env.PORT;
+const PORT = process.env.PORT || 3001;
 
-// Test connexion PostgreSQL
+const server = http.createServer(app);
+
+initWebSocketServer(server);
+
+global.ws = { broadcastNewReading, broadcastNewAlert, broadcastEquipmentStatus };
+
 pool.query('SELECT NOW()', (err, result) => {
   if (err) {
     console.error('PostgreSQL connection failed:', err.message);
@@ -15,17 +21,24 @@ pool.query('SELECT NOW()', (err, result) => {
   }
 });
 
-// Lancer le serveur
-app.listen(PORT, () => {
-  console.log(`\nServer running on http://localhost:${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/api/health`);
-  console.log(`\nAPI Endpoints:`);
-  console.log(`   POST   /api/readings`);
-  console.log(`   GET    /api/readings/status`);
-  console.log(`   GET    /api/readings/history`);
-  console.log(`   GET    /api/readings/stats`);
-  console.log(`   POST   /api/actions/water`);
-  console.log(`   DELETE /api/actions/water/:id`);
-  console.log(`   POST   /api/actions/lighting`);
-  console.log(`   GET    /api/alerts\n`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`\nServer running on http://0.0.0.0:${PORT}`);
+  console.log(`Socket.io: ws://10.0.3.171:${PORT}`);
+  console.log(`Health check: http://10.0.3.171:${PORT}/api/health\n`);
+});
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} deja utilise`);
+    process.exit(1);
+  }
+  throw error;
+});
+
+process.on('SIGINT', () => {
+  console.log('\nArret du serveur...');
+  server.close(() => {
+    pool.end();
+    process.exit(0);
+  });
 });
