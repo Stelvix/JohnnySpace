@@ -8,6 +8,8 @@ import Equipements from './pages/Equipements'
 import Historique from './pages/Historique'
 import { useWebSocket } from './hooks/useWebSocket'
 
+export const RASPI_BASE_URL = 'http://10.0.3.171:3001';
+
 interface WebSocketContextType {
     data: any;
     connected: boolean;
@@ -17,7 +19,7 @@ interface WebSocketContextType {
 const WebSocketContext = createContext<WebSocketContextType | undefined>(undefined);
 
 function WebSocketProvider({ children }: { readonly children: ReactNode }) {
-    const { data, connected, send } = useWebSocket('http://10.0.3.171:3001');
+    const { data, connected, send } = useWebSocket(RASPI_BASE_URL);
 
     const value = useMemo<WebSocketContextType>(() => ({
         data,

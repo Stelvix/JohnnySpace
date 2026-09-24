@@ -1,6 +1,70 @@
 import { HiOutlineRefresh, HiOutlineUser, HiOutlineCheckCircle } from 'react-icons/hi'
+import { useEffect, useState } from 'react'
+import { RASPI_BASE_URL, useWebSocketContext } from '../App'
+
+interface FeedItem {
+  id: string;
+  label: string;
+  timestamp: string;
+  kind: 'action' | 'alert';
+}
 
 export default function Historique() {
+  const { data } = useWebSocketContext();
+  const [feed, setFeed] = useState<FeedItem[]>([]);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const [actionsRes, alertsRes] = await Promise.all([
+          fetch(`${RASPI_BASE_URL}/api/actions/history?limit=20`),
+          fetch(`${RASPI_BASE_URL}/api/alerts?limit=20`),
+        ]);
+
+        const [actionsData, alertsData] = await Promise.all([
+          actionsRes.ok ? actionsRes.json() : { data: [] },
+          alertsRes.ok ? alertsRes.json() : { data: [] },
+        ]);
+
+        const actions: FeedItem[] = (actionsData.data ?? []).map((action: any) => ({
+          id: action.id ?? `${action.type}-${action.start_time}`,
+          label: action.type === 'light'
+            ? `Lumière ${action.status === 'completed' ? 'éteinte' : 'allumée'}`
+            : action.type === 'music'
+              ? `Musique ${action.status === 'completed' ? 'arrêtée' : 'démarrée'}`
+              : `Action ${action.type}`,
+          timestamp: action.start_time ?? action.end_time ?? new Date().toISOString(),
+          kind: 'action',
+        }));
+
+        const alerts: FeedItem[] = (alertsData.data ?? []).map((alert: any) => ({
+          id: alert.id ?? `${alert.type}-${alert.created_at}`,
+          label: `${alert.type}: ${alert.message}`,
+          timestamp: alert.created_at ?? new Date().toISOString(),
+          kind: 'alert',
+        }));
+
+        const merged = [...actions, ...alerts]
+          .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+          .slice(0, 20);
+
+        setFeed(merged);
+      } catch {
+        const fallbackAlerts = Array.isArray(data?.alerts) ? data.alerts : [];
+        setFeed(
+          fallbackAlerts.map((alert: any, index: number) => ({
+            id: alert.id ?? `${alert.type}-${index}`,
+            label: `${alert.type}: ${alert.message}`,
+            timestamp: alert.created_at ?? alert.timestamp ?? new Date().toISOString(),
+            kind: 'alert',
+          }))
+        );
+      }
+    };
+
+    loadHistory();
+  }, [data?.alerts]);
+
   return (
     <div className="ml-72 min-h-screen flex-1 bg-[#051424]">
       <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-white/10 bg-[#051424]/80 px-8 backdrop-blur-md">
@@ -34,19 +98,19 @@ export default function Historique() {
           </div>
 
           <section className="rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,_rgba(18,33,49,1),_rgba(11,20,29,1))] p-4 shadow-[0_18px_30px_rgba(0,0,0,0.18)]">
-            {[ 
-              ['Mesure des capteurs reçue', '5 min ago'],
-              ['Arrosage automatique effectué', '2 h ago'],
-              ['Éclairage activé', 'Aujourd’hui'],
-            ].map(([event, time]) => (
-              <div key={event} className="flex items-center justify-between gap-3 border-b border-white/10 py-4 last:border-b-0 first:pt-1">
+            {feed.length > 0 ? feed.map((item) => (
+              <div key={item.id} className="flex items-center justify-between gap-3 border-b border-white/10 py-4 last:border-b-0 first:pt-1">
                 <div className="flex items-center gap-3 text-sm text-[#edf7ff]">
                   <HiOutlineCheckCircle className="text-[20px] text-[#6ffbbe]" />
-                  <span>{event}</span>
+                  <span>{item.label}</span>
                 </div>
-                <span className="text-[12px] text-[#9bb0bd]">{time}</span>
+                <span className="text-[12px] text-[#9bb0bd]">{new Date(item.timestamp).toLocaleString('fr-FR')}</span>
               </div>
-            ))}
+            )) : (
+              <div className="flex items-center justify-center py-8 text-sm text-[#9bb0bd]">
+                Aucune activité récente.
+              </div>
+            )}
           </section>
         </div>
       </main>

@@ -1,5 +1,4 @@
 import { HiOutlineRefresh, HiOutlineUser } from 'react-icons/hi'
-import { useState } from 'react'
 import PlantsChartsHumidity from '../composants/PlantsChartsHumidity'
 import PlantsChartsTemperature from '../composants/PlantChartsTemperature'
 import { useWebSocketContext } from '../App'
@@ -7,27 +6,6 @@ import { useWebSocketContext } from '../App'
 export default function Plante() {
   const { data, connected } = useWebSocketContext();
   const { lastReading } = data;
-  const [duration, setDuration] = useState(30);
-  const [loading, setLoading] = useState(false);
-
-  const handleWater = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('http://localhost:3001/api/actions/water', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ duration, isAuto: false })
-      });
-
-      if (response.ok) {
-        alert(`Arrosage lance pour ${duration}s`);
-      }
-    } catch (error) {
-      alert('Erreur: ' + (error instanceof Error ? error.message : 'Erreur'));
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
       <div className="ml-72 min-h-screen flex-1 bg-[#051424]">
@@ -103,38 +81,10 @@ export default function Plante() {
                     </p>
                   </div>
                   <div className="rounded-[18px] border border-white/10 bg-[#0d1c2d] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.12em] text-[#8ca8bb]">Besoin d\'eau</p>
-                    <p className={`mt-3 text-lg font-semibold ${lastReading?.soil_humidity && lastReading.soil_humidity < 30 ? 'text-red-500' : 'text-[#6ffbbe]'}`}>
-                      {lastReading?.soil_humidity && lastReading.soil_humidity < 30 ? 'A arroser!' : 'Hydratation ideale'}
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-[#8ca8bb]">Humidité du sol</p>
+                    <p className={`mt-3 text-lg font-semibold ${lastReading?.soil_humidity !== undefined && lastReading.soil_humidity < 30 ? 'text-red-500' : 'text-[#6ffbbe]'}`}>
+                      {lastReading?.soil_humidity !== undefined && lastReading.soil_humidity < 30 ? 'Attention' : 'Stable'}
                     </p>
-                  </div>
-
-                  <div className="rounded-[18px] border border-white/10 bg-[#0d1c2d] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.12em] text-[#8ca8bb] mb-3">Arroser la Plante</p>
-
-                    <div className="mb-3">
-                      <input
-                          type="range"
-                          min="1"
-                          max="120"
-                          value={duration}
-                          onChange={(e) => setDuration(parseInt(e.target.value))}
-                          className="w-full"
-                      />
-                      <p className="text-center text-sm font-semibold mt-2 text-[#7bd0ff]">{duration}s</p>
-                    </div>
-
-                    <button
-                        onClick={handleWater}
-                        disabled={loading}
-                        className={`w-full py-2 rounded font-semibold text-sm transition ${
-                            loading
-                                ? 'bg-gray-500 cursor-not-allowed'
-                                : 'bg-[#4edea3] hover:bg-[#3dbf8e] cursor-pointer text-[#051424]'
-                        }`}
-                    >
-                      {loading ? 'Arrosage...' : 'Arroser'}
-                    </button>
                   </div>
                 </div>
               </div>

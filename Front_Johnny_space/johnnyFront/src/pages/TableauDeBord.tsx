@@ -6,11 +6,10 @@ import {
   HiOutlineCheckCircle,
   HiOutlineLightBulb,
 } from 'react-icons/hi'
-import { BsDroplet } from 'react-icons/bs'
 import { useEffect, useState } from 'react'
 import conditionsData from '../data/conditions.json'
 import CarteMesure from '../composants/CarteMesure'
-import { useWebSocketContext } from '../App'
+import { RASPI_BASE_URL, useWebSocketContext } from '../App'
 
 export default function TableauDeBord() {
   const { data, connected } = useWebSocketContext();
@@ -55,25 +54,9 @@ export default function TableauDeBord() {
     }
   }, [lastReading]);
 
-  const handleWater = async () => {
-    try {
-      const response = await fetch('http://localhost:3001/api/actions/water', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ duration: 50, isAuto: false })
-      });
-
-      if (response.ok) {
-        alert('Arrosage de 50 ml lance!');
-      }
-    } catch (error) {
-      alert('Erreur: ' + (error instanceof Error ? error.message : 'Erreur'));
-    }
-  };
-
   const handleLight = async (state: boolean) => {
     try {
-      const response = await fetch('http://localhost:3001/api/actions/lighting', {
+      const response = await fetch(`${RASPI_BASE_URL}/api/actions/lighting`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ state })
@@ -102,7 +85,7 @@ export default function TableauDeBord() {
             </div>
 
             <div className="flex items-center gap-3 pl-1">
-              <span className="text-xs font-semibold text-[#edf7ff]">Thomas</span>
+              <span className="text-xs font-semibold text-[#edf7ff]">Johnny</span>
               <div className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-gradient-to-br from-[#122131] to-[#0d1c2d] text-[#dfeaf7] shadow-[0_8px_20px_rgba(8,16,28,0.55)]">
                 <HiOutlineUser className="text-[18px]" />
               </div>
@@ -114,7 +97,7 @@ export default function TableauDeBord() {
           <div className="mx-auto flex max-w-6xl flex-col gap-5">
             <div className="pt-1">
               <h1 className="m-0 text-2xl font-bold text-[#edf7ff]">
-                Bonjour Thomas
+                Bonjour, je suis Johnny
               </h1>
               <p className="mt-2 text-base text-[#9bb0bd]">
                 {lastReading ? `Johnny est ${lastReading.is_valid ? 'en bonne sante' : 'donnees invalides'}` : 'Chargement...'}
@@ -148,18 +131,18 @@ export default function TableauDeBord() {
                 <div className="flex flex-col gap-3 border-t border-white/10 pt-4">
                   <div className="flex items-center justify-between gap-3 text-[12px] text-[#9bb0bd]">
                     <div className="flex items-center gap-2">
-                      <BsDroplet className="text-[18px] text-[#7bd0ff]" />
-                      <span>Besoin en eau</span>
+                      <HiOutlineLightBulb className="text-[18px] text-[#7bd0ff]" />
+                      <span>Humidité du sol</span>
                     </div>
-                    <span className={`font-semibold ${lastReading?.soil_humidity && lastReading.soil_humidity < 30 ? 'text-red-500' : 'text-[#6ffbbe]'}`}>
-                    {lastReading?.soil_humidity && lastReading.soil_humidity < 30 ? 'A arroser!' : 'Hydratation optimale'}
-                  </span>
+                    <span className={`font-semibold ${lastReading?.soil_humidity !== undefined && lastReading.soil_humidity < 30 ? 'text-red-500' : 'text-[#6ffbbe]'}`}>
+                      {lastReading?.soil_humidity !== undefined && lastReading.soil_humidity < 30 ? 'Attention' : 'Stable'}
+                    </span>
                   </div>
 
                   <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
                     <div
                         className="h-full rounded-full bg-gradient-to-r from-[#10b981] via-[#4edea3] to-[#7bd0ff]"
-                        style={{ width: `${lastReading?.soil_humidity || 0}%` }}
+                        style={{ width: `${lastReading?.soil_humidity ?? 0}%` }}
                     />
                   </div>
                 </div>
@@ -207,24 +190,6 @@ export default function TableauDeBord() {
                         aria-label="Basculer la lumiere"
                         className="relative h-6 w-11 rounded-full bg-[#10b981] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.15)] after:absolute after:top-[3px] after:right-[3px] after:h-[18px] after:w-[18px] after:rounded-full after:bg-[#eafef7]"
                     />
-                  </div>
-
-                  <div className="flex items-center justify-between gap-3 rounded-[16px] border border-white/10 bg-[#0d1c2d] p-3 transition-colors hover:bg-[#122131]">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#122131] text-[#7bd0ff] shadow-inner shadow-[#7bd0ff]/10">
-                        <BsDroplet className="text-[22px]" />
-                      </div>
-                      <div className="flex flex-col">
-                        <strong className="text-sm font-semibold text-[#edf7ff]">Pompe d&apos;arrosage</strong>
-                        <span className="text-[12px] text-[#9bb0bd]">Humidification des racines</span>
-                      </div>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={handleWater}
-                        className="rounded-xl border border-[#10b981]/20 bg-[#10b981]/10 px-3 py-2 text-[12px] font-semibold text-[#edf7ff] transition-colors hover:bg-[#10b981]/15">
-                      Arroser 50 ml
-                    </button>
                   </div>
 
                   <div className="flex items-center justify-between gap-3 rounded-[16px] border border-white/10 bg-[#0d1c2d] p-3 transition-colors hover:bg-[#122131]">
@@ -279,10 +244,10 @@ export default function TableauDeBord() {
 
                   <div className="flex items-center justify-between gap-3 py-3">
                     <div className="flex items-center gap-3 text-sm text-[#edf7ff]">
-                      <BsDroplet className="text-[20px] text-[#7bd0ff]" />
-                      <span>Arrosage de 50 ml effectue</span>
+                      <HiOutlineLightBulb className="text-[20px] text-[#ffb95f]" />
+                      <span>Captage lumineux actif</span>
                     </div>
-                    <span className="text-[12px] text-[#9bb0bd]">ce matin</span>
+                    <span className="text-[12px] text-[#9bb0bd]">en temps reel</span>
                   </div>
                 </div>
               </div>

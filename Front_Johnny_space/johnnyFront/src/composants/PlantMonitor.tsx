@@ -1,7 +1,9 @@
 import { useWebSocket } from '../hooks/useWebSocket';
 
+const RASPI_WS_URL = 'http://10.0.3.171:3001';
+
 export function PlantMonitor() {
-    const { data, connected } = useWebSocket('ws://localhost:3001');
+    const { data, connected } = useWebSocket(RASPI_WS_URL);
     const { lastReading, alerts, equipment } = data;
 
     return (
@@ -23,7 +25,7 @@ export function PlantMonitor() {
             {alerts.length > 0 && (
                 <div style={{ border: '2px solid red', padding: '10px', marginBottom: '10px', backgroundColor: '#ffe6e6' }}>
                     <h3> Alertes ({alerts.length})</h3>
-                    {alerts.slice(0, 5).map((alert) => (
+                    {alerts.slice(0, 5).map((alert: any) => (
                         <div key={alert.id} style={{ padding: '5px', color: 'red', borderBottom: '1px solid #ddd' }}>
                             <strong>{alert.type}:</strong> {alert.message}
                         </div>
@@ -34,7 +36,7 @@ export function PlantMonitor() {
             {equipment.length > 0 && (
                 <div style={{ border: '1px solid blue', padding: '10px' }}>
                     <h3> Équipements</h3>
-                    {equipment.map((eq) => (
+                    {equipment.map((eq: any) => (
                         <div key={eq.id} style={{ padding: '5px' }}>
                             {eq.name}: <strong style={{ color: eq.status === 'on' ? 'green' : 'gray' }}>{eq.status}</strong>
                         </div>
